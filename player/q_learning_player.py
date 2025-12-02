@@ -28,10 +28,10 @@ class QLearningWorm(PlayerWorm):
 
     def get_state(self, world, worms):
         head_x, head_y = self.head
-
-        # 1. Food direction
+        
+        # 1. Food Radar (10-cell radius)
         target_pellet = None
-        min_dist = float('inf')
+        min_dist = 10
         for pellet in world.pellets:
             dist = abs(head_x - pellet.x) + abs(head_y - pellet.y)
             if dist < min_dist:
@@ -45,20 +45,23 @@ class QLearningWorm(PlayerWorm):
             elif target_pellet.x < head_x: food_dir_x = -1
             if target_pellet.y > head_y: food_dir_y = 1
             elif target_pellet.y < head_y: food_dir_y = -1
-        
-        # 2. Dangers
+
+        # 2. Granular Dangers
         dangers = []
         for dx, dy in [(0, 1), (0, -1), (1, 0), (-1, 0)]: # up, down, right, left
             x, y = head_x + dx, head_y + dy
-            is_wall = not (0 <= x < world.columns and 0 <= y < world.rows)
-            is_body = (x, y) in self.cells
-            is_other_worm = False
-            if worms:
+            
+            danger = 0 # 0: no danger
+            if not (0 <= x < world.columns and 0 <= y < world.rows):
+                danger = 1 # 1: wall
+            elif (x, y) in self.cells:
+                danger = 2 # 2: own body
+            elif worms:
                 for worm in worms:
                     if worm is not self and (x, y) in worm.cells:
-                        is_other_worm = True
+                        danger = 3 # 3: other worm
                         break
-            dangers.append(1 if is_wall or is_body or is_other_worm else 0)
+            dangers.append(danger)
 
         return (food_dir_x, food_dir_y, *dangers)
 
@@ -68,10 +71,18 @@ class QLearningWorm(PlayerWorm):
         if state not in self.q_table:
             self.q_table[state] = {a: 0 for a in [(0, 1), (0, -1), (1, 0), (-1, 0)]}
 
+        # Filter out the reverse action
+        possible_actions = list(self.q_table[state].keys())
+        reverse_action = (-self.direction[0], -self.direction[1])
+        if reverse_action in possible_actions and len(self.cells) > 1:
+            possible_actions.remove(reverse_action)
+
         if random.uniform(0, 1) < self.epsilon:
-            action = random.choice(list(self.q_table[state].keys()))
+            action = random.choice(possible_actions)
         else:
-            action = max(self.q_table[state], key=self.q_table[state].get)
+            # Create a dictionary with only the possible actions
+            q_values = {a: self.q_table[state][a] for a in possible_actions}
+            action = max(q_values, key=q_values.get)
 
         self.direction = action
         self.last_state = state
