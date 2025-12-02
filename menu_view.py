@@ -22,9 +22,13 @@ class MenuView(arcade.View):
         q_learning_button = arcade.gui.UIFlatButton(text="Entrainer Q-learning", width=200)
         self.v_box.add(q_learning_button)
 
+        q_learning_solo_button = arcade.gui.UIFlatButton(text="Entrainer Q-learning (Solo)", width=200)
+        self.v_box.add(q_learning_solo_button)
+
         ai_button.on_click = self.on_click_ai
         player_button.on_click = self.on_click_player
         q_learning_button.on_click = self.on_click_q_learning
+        q_learning_solo_button.on_click = self.on_click_q_learning_solo
 
         self.manager.add(
             arcade.gui.UIAnchorLayout(
@@ -43,6 +47,10 @@ class MenuView(arcade.View):
 
     def on_click_q_learning(self, event):
         game_view = GameView("Q-LEARNING")
+        self.window.show_view(game_view)
+
+    def on_click_q_learning_solo(self, event):
+        game_view = GameView("Q-LEARNING-SOLO")
         self.window.show_view(game_view)
 
     def on_draw(self):

@@ -15,15 +15,16 @@ class Pellet:
 
 
 class World:
-    def __init__(self):
-        self.columns = WORLD_COLUMNS
-        self.rows = WORLD_ROWS
+    def __init__(self, columns=None, rows=None, initial_pellet_count=None):
+        self.columns = columns or WORLD_COLUMNS
+        self.rows = rows or WORLD_ROWS
+        self.initial_pellet_count = initial_pellet_count or INITIAL_PELLET_COUNT
         self.pellets: List[Pellet] = []
 
     def reset(self, snake_cells: List[Tuple[int, int]]):
         """Réinitialise le monde et génère le champ de boulettes."""
         self.pellets.clear()
-        for _ in range(INITIAL_PELLET_COUNT):
+        for _ in range(self.initial_pellet_count):
             self.spawn_pellet(snake_cells)
 
     def spawn_pellet(self, forbidden_cells: List[Tuple[int, int]]):

@@ -12,18 +12,31 @@ class QLearningWorm(PlayerWorm):
         # Hyperparameters
         self.alpha = 0.1  # Learning rate
         self.gamma = 0.9  # Discount factor
-        self.epsilon = 0.1  # Exploration rate
+        self.epsilon = 1.0  # Exploration rate
+        self.epsilon_decay = 0.995
+        self.min_epsilon = 0.05
 
         self.last_state = None
         self.last_action = None
         self.last_score = 0
 
+    @property
+    def q_table_size(self):
+        return len(self.q_table)
+
     def load_q_table(self):
         if os.path.exists(self.q_table_path):
-            return np.load(self.q_table_path, allow_pickle=True).item()
+            q_table = np.load(self.q_table_path, allow_pickle=True).item()
+            # Load epsilon from q_table if it exists
+            if 'epsilon' in q_table:
+                self.epsilon = q_table['epsilon']
+                del q_table['epsilon'] # remove it to not interfere with state keys
+            return q_table
         return {}
 
     def save_q_table(self):
+        # Save epsilon along with the q_table
+        self.q_table['epsilon'] = self.epsilon
         np.save(self.q_table_path, self.q_table)
 
     def get_state(self, world, worms):
@@ -148,3 +161,7 @@ class QLearningWorm(PlayerWorm):
         self.last_state = None
         self.last_action = None
         self.last_score = 0
+        
+        # Epsilon decay
+        self.epsilon = max(self.min_epsilon, self.epsilon * self.epsilon_decay)
+

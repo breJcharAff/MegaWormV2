@@ -16,6 +16,10 @@ MOVE_INTERVAL = 0.05
 INITIAL_PELLET_COUNT = 200
 NUM_BOTS = 5
 
+SMALL_WORLD_COLUMNS = 30
+SMALL_WORLD_ROWS = 30
+SMALL_INITIAL_PELLET_COUNT = 20
+
 # Assets intégrés d'Arcade (coins)
 # cf. :resources:images/items/coinBronze.png / coinSilver.png / coinGold.png
 PELLET_TYPES = [
