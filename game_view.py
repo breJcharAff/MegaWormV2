@@ -47,6 +47,7 @@ class GameView(arcade.View):
 
         self.game_number = 0
         self.score_history = []
+        self.restart_timer = 0.0
         
         self.reset()
 
@@ -80,10 +81,17 @@ class GameView(arcade.View):
 
         self.world.reset(all_cells)
         self.time_since_last_move = 0.0
+        self.restart_timer = 0.0
         self.update_camera()
 
     def on_update(self, delta_time: float):
         if not self.worms[0].alive:
+            if self.player_mode == "Q-LEARNING-SOLO":
+                self.restart_timer += delta_time
+                if self.restart_timer > 1.0:
+                    if "Q-LEARNING" in self.player_mode and self.worms:
+                        self.worms[0].save_q_table()
+                    self.reset()
             return
 
         self.time_since_last_move += delta_time
@@ -176,7 +184,12 @@ class GameView(arcade.View):
             arcade.draw_text(f"Avg Score (last 100): {avg_score:.2f}", 10, SCREEN_HEIGHT - 150, arcade.color.WHITE, 16)
 
         if not main_player.alive:
-            arcade.draw_text("GAME OVER - Espace pour recommencer", SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, arcade.color.WHITE, 20, anchor_x="center", anchor_y="center")
+            # In solo mode, don't show the restart message, as it's automatic
+            if self.player_mode != "Q-LEARNING-SOLO":
+                arcade.draw_text("GAME OVER - Espace pour recommencer", SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, arcade.color.WHITE, 20, anchor_x="center", anchor_y="center")
+            else:
+                arcade.draw_text("GAME OVER", SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, arcade.color.WHITE, 20, anchor_x="center", anchor_y="center")
+
 
     def on_key_press(self, symbol, modifiers):
         import arcade as _a
@@ -184,10 +197,11 @@ class GameView(arcade.View):
             if symbol in (_a.key.UP, _a.key.DOWN, _a.key.LEFT, _a.key.RIGHT):
                 self.worms[0].set_direction_from_key(symbol)
         
-        if symbol == _a.key.SPACE and not self.worms[0].alive:
-            if "Q-LEARNING" in self.player_mode and self.worms:
-                self.worms[0].save_q_table()
-            self.reset()
+        if self.player_mode != "Q-LEARNING-SOLO":
+            if symbol == _a.key.SPACE and not self.worms[0].alive:
+                if "Q-LEARNING" in self.player_mode and self.worms:
+                    self.worms[0].save_q_table()
+                self.reset()
 			
     def on_hide_view(self):
         if "Q-LEARNING" in self.player_mode and self.worms:
