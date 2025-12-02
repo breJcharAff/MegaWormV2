@@ -74,7 +74,7 @@ class PlayerWorm:
         # Collision avec les autres vers
         if worms:
             for worm in worms:
-                if worm is not self and new_head in worm.cells:
+                if worm is not self and worm.alive and new_head in worm.cells:
                     self.die(world)
                     return
 

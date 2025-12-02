@@ -30,7 +30,7 @@ class AIWorm(PlayerWorm):
             is_other_worm = False
             if worms:
                 for worm in worms:
-                    if worm is not self and new_head in worm.cells:
+                    if worm is not self and worm.alive and new_head in worm.cells:
                         is_other_worm = True
                         break
 

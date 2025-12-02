@@ -71,7 +71,7 @@ class QLearningWorm(PlayerWorm):
                 danger = 2 # 2: own body
             elif worms:
                 for worm in worms:
-                    if worm is not self and (x, y) in worm.cells:
+                    if worm is not self and worm.alive and (x, y) in worm.cells:
                         danger = 3 # 3: other worm
                         break
             dangers.append(danger)
