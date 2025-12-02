@@ -13,8 +13,9 @@ from config import (
     NUM_BOTS,
 )
 from world.map import World
-from player.ai_player import AIWorm
 from player.player import PlayerWorm
+from player.q_learning_player import QLearningWorm
+from player.ai_player import AIWorm
 
 
 class GameView(arcade.View):
@@ -44,11 +45,17 @@ class GameView(arcade.View):
 
     def reset(self):
         """Réinitialise la partie."""
+        # Save Q-table if the game is restarting
+        if self.player_mode == "Q-LEARNING" and self.worms and not self.worms[0].alive:
+            self.worms[0].save_q_table()
+
         self.worms.clear()
 
         # Create main player
         if self.player_mode == "AI":
             main_worm = AIWorm()
+        elif self.player_mode == "Q-LEARNING":
+            main_worm = QLearningWorm()
         else:
             main_worm = PlayerWorm()
         self.worms.append(main_worm)
@@ -70,6 +77,8 @@ class GameView(arcade.View):
     def on_update(self, delta_time: float):
         # Allow a reset only if the main player is dead
         if not self.worms[0].alive:
+            if self.player_mode == "Q-LEARNING":
+                self.worms[0].save_q_table()
             return
 
         self.time_since_last_move += delta_time
@@ -223,3 +232,10 @@ class GameView(arcade.View):
         
         if symbol == _a.key.SPACE and not self.worms[0].alive:
             self.reset()
+
+    def on_close(self):
+        """Save Q-table on window close."""
+        if self.player_mode == "Q-LEARNING" and self.worms:
+            self.worms[0].save_q_table()
+        super().on_close()
+
